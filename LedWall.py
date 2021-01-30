@@ -2,6 +2,7 @@ import Simulate
 import LedWallScenes as Scenes
 import board
 import neopixel
+import time
 
 PIXEL_PIN = board.D18
 ORDER = neopixel.GRB
@@ -50,12 +51,15 @@ class Grid:
             print("")
 
     def Display(self, frames, fps=30):
+        self.controller.show()
         milliseconds_per_frame = 1000 / 30
         for frame in frames:
             for PixelColorPair in frame:
                 pixel = PixelColorPair[0]
                 color = PixelColorPair[1]
                 pixel.SetColor(color)
+            self.controller.show()
+            time.sleep(0.001)
 
 if __name__ == "__main__":
     num_blocks_wide = 2

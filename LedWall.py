@@ -3,13 +3,16 @@ import LedWallScenes as Scenes
 import time
 import platform
 
+IS_PI = "arm" in platform.machine().lower()
+
 def GetController(num_pixels):
-    if platform.machine() is "armv7l":
+    print(f"Loading config for platform {platform.machine()}")
+    if IS_PI:
         import board
         import neopixel
         PIXEL_PIN = board.D18
         ORDER = neopixel.GRB
-        controller = neopixel.NeoPixel(PIXEL_PIN, total_pixels, brightness=0.8, auto_write=False, pixel_order=ORDER)
+        controller = neopixel.NeoPixel(PIXEL_PIN, num_pixels, brightness=0.8, auto_write=False, pixel_order=ORDER)
         return controller
     else:
         return None
@@ -57,16 +60,19 @@ class Grid:
                 print(f"({ridx},{cidx}): {pixel.strand_location}", end="\t")
             print("")
 
-    def Display(self, frames, fps=30):
+    def Display(self, frames, fps=30, endless=False):
         self.controller.show()
-        milliseconds_per_frame = 1000 / 30
-        for frame in frames:
-            for PixelColorPair in frame:
-                pixel = PixelColorPair[0]
-                color = PixelColorPair[1]
-                pixel.SetColor(color)
-            self.controller.show()
-            time.sleep(0.001)
+        milliseconds_per_frame = float(fps) / 1000.0
+        while True:
+            for frame in frames:
+                for PixelColorPair in frame:
+                    pixel = PixelColorPair[0]
+                    color = PixelColorPair[1]
+                    pixel.SetColor(color)
+                self.controller.show()
+                time.sleep(milliseconds_per_frame)
+            if not endless:
+                break
 
 if __name__ == "__main__":
     num_blocks_wide = 2
@@ -82,7 +88,7 @@ if __name__ == "__main__":
     # image = Scenes.DisplayImage(pixelGrid, "")
     # video = Scenes.PlayVideo(pixelGrid, "")
     total_frames = wall + wheel
-    if platform.machine() is "armv7l":
-        pixelGrid.Display(wheel)
-    else:    
+    if IS_PI:
+        pixelGrid.Display(wheel, 30, True)
+    else:
         simulator.Run(wheel, 30)

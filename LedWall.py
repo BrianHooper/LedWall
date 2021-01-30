@@ -1,23 +1,22 @@
-# num_blocks_wide = 5
-# num_blocks_tall = 4
-# block_pixels_wide = 7
-# block_pixels_tall = 7
-
 import Simulate
 import LedWallScenes as Scenes
+import board
+import neopixel
+
+PIXEL_PIN = board.D18
+ORDER = neopixel.GRB
 
 class Pixel:
-    def __init__(self, strand_location, grid_location, neopixels):
+    def __init__(self, strand_location, grid_location, controller):
         self.strand_location = strand_location
         self.grid_location = grid_location
-        self.neopixels = neopixels
+        self.controller = controller
 
     def SetColor(self, color):
-        self.neopixels[self.strand_location] = color
+        self.controller[self.strand_location] = color
 
 class Grid:
     def __init__(self, num_blocks_wide, num_blocks_tall, block_width, block_height):
-        self.neopixels = None
         self.num_blocks_wide = num_blocks_wide
         self.num_blocks_tall = num_blocks_tall
         self.block_width = block_width
@@ -30,6 +29,10 @@ class Grid:
         total_rows_high = num_blocks_tall * block_pixels_tall
         total_cols_wide = num_blocks_wide * block_pixels_wide
 
+        total_pixels = self.width * self.height
+        self.controller = neopixel.NeoPixel(PIXEL_PIN, total_pixels, brightness=0.8, auto_write=False, pixel_order=ORDER)
+
+
         self.pixels = [[-1 for x in range(0, self.width)] for y in range(0, self.height)]
 
         count = 0
@@ -37,7 +40,7 @@ class Grid:
             for cidx in range(0, self.num_blocks_wide):
                 for bridx in range(self.block_height * ridx, self.block_height * (ridx + 1)):
                     for bcidx in range(self.block_width * cidx, self.block_width * (cidx + 1)):
-                        self.pixels[bridx][bcidx] = Pixel(count, (bridx,bcidx), self.neopixels)
+                        self.pixels[bridx][bcidx] = Pixel(count, (bridx,bcidx), self.controller)
                         count += 1
 
     def PrintGrid(self):
@@ -52,13 +55,13 @@ class Grid:
             for PixelColorPair in frame:
                 pixel = PixelColorPair[0]
                 color = PixelColorPair[1]
-                pixels.SetColor(color)
+                pixel.SetColor(color)
 
 if __name__ == "__main__":
-    num_blocks_wide = 5
-    num_blocks_tall = 4
-    block_pixels_wide = 7
-    block_pixels_tall = 7
+    num_blocks_wide = 2
+    num_blocks_tall = 2
+    block_pixels_wide = 4
+    block_pixels_tall = 3
 
     pixelGrid = Grid(num_blocks_wide, num_blocks_tall, block_pixels_wide, block_pixels_tall)
     simulator = Simulate.Simulator(pixelGrid, 2)
@@ -67,4 +70,5 @@ if __name__ == "__main__":
     wheel = Scenes.ColorWheel(pixelGrid)
     # image = Scenes.DisplayImage(pixelGrid, "")
     # video = Scenes.PlayVideo(pixelGrid, "")
-    simulator.Run(wheel, 30)
+    # simulator.Run(wheel, 30)
+    pixelGrid.Display(wheel)

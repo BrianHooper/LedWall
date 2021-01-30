@@ -1,11 +1,19 @@
 import Simulate
 import LedWallScenes as Scenes
-import board
-import neopixel
 import time
+import platform
 
-PIXEL_PIN = board.D18
-ORDER = neopixel.GRB
+def GetController(num_pixels):
+    if platform.machine() is "armv7l":
+        import board
+        import neopixel
+        PIXEL_PIN = board.D18
+        ORDER = neopixel.GRB
+        controller = neopixel.NeoPixel(PIXEL_PIN, total_pixels, brightness=0.8, auto_write=False, pixel_order=ORDER)
+        return controller
+    else:
+        return None
+
 
 class Pixel:
     def __init__(self, strand_location, grid_location, controller):
@@ -14,7 +22,8 @@ class Pixel:
         self.controller = controller
 
     def SetColor(self, color):
-        self.controller[self.strand_location] = color
+        if self.controller is not None:
+            self.controller[self.strand_location] = color
 
 class Grid:
     def __init__(self, num_blocks_wide, num_blocks_tall, block_width, block_height):
@@ -31,9 +40,7 @@ class Grid:
         total_cols_wide = num_blocks_wide * block_pixels_wide
 
         total_pixels = self.width * self.height
-        self.controller = neopixel.NeoPixel(PIXEL_PIN, total_pixels, brightness=0.8, auto_write=False, pixel_order=ORDER)
-
-
+        self.controller = GetController(total_pixels)
         self.pixels = [[-1 for x in range(0, self.width)] for y in range(0, self.height)]
 
         count = 0
@@ -74,5 +81,8 @@ if __name__ == "__main__":
     wheel = Scenes.ColorWheel(pixelGrid)
     # image = Scenes.DisplayImage(pixelGrid, "")
     # video = Scenes.PlayVideo(pixelGrid, "")
-    # simulator.Run(wheel, 30)
-    pixelGrid.Display(wheel)
+    total_frames = wall + wheel
+    if platform.machine() is "armv7l":
+        pixelGrid.Display(wheel)
+    else:    
+        simulator.Run(wheel, 30)

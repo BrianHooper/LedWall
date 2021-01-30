@@ -38,12 +38,12 @@ class Simulator:
                         quit()
 
 
-                for frame_pixel in frame:
-                    x = frame_pixel[0][0]
-                    y = frame_pixel[0][1]
-                    color = frame_pixel[1]
+                for PixelColorPair in frame:
+                    pixel = PixelColorPair[0]
+                    color = PixelColorPair[1]
+                    x = pixel.grid_location[0]
+                    y = pixel.grid_location[1]
                     self.pixels[x][y].SetColor(color)
-
 
                 self.fpsclock.tick(fps)
                 pygame.display.update()

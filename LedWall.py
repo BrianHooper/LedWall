@@ -6,23 +6,18 @@
 import Simulate
 import LedWallScenes as Scenes
 
-BLACK = (0, 0, 0)
-WHITE = (0, 0, 0)
-
 class Pixel:
     def __init__(self, strand_location, grid_location, neopixels):
         self.strand_location = strand_location
         self.grid_location = grid_location
         self.neopixels = neopixels
-        self.color = BLACK
 
     def SetColor(self, color):
-        self.color = color
-        # self.neopixels[self.strand_location] = color
+        self.neopixels[self.strand_location] = color
 
 class Grid:
-    def __init__(self, neopixels, num_blocks_wide, num_blocks_tall, block_width, block_height):
-        self.neopixels = neopixels
+    def __init__(self, num_blocks_wide, num_blocks_tall, block_width, block_height):
+        self.neopixels = None
         self.num_blocks_wide = num_blocks_wide
         self.num_blocks_tall = num_blocks_tall
         self.block_width = block_width
@@ -45,24 +40,31 @@ class Grid:
                         self.pixels[bridx][bcidx] = Pixel(count, (bridx,bcidx), self.neopixels)
                         count += 1
 
-    def Display(self):
+    def PrintGrid(self):
         for ridx, row in enumerate(self.pixels):
             for cidx, pixel in enumerate(row):
                 print(f"({ridx},{cidx}): {pixel.strand_location}", end="\t")
             print("")
 
-if __name__ == "__main__":
-    # num_blocks_wide = 4
-    # num_blocks_tall = 3
-    # block_pixels_wide = 2
-    # block_pixels_tall = 2
+    def Display(self, frames, fps=30):
+        milliseconds_per_frame = 1000 / 30
+        for frame in frames:
+            for PixelColorPair in frame:
+                pixel = PixelColorPair[0]
+                color = PixelColorPair[1]
+                pixels.SetColor(color)
 
+if __name__ == "__main__":
     num_blocks_wide = 5
     num_blocks_tall = 4
     block_pixels_wide = 7
     block_pixels_tall = 7
 
-    pixelGrid = Grid(None, num_blocks_wide, num_blocks_tall, block_pixels_wide, block_pixels_tall)
-    simulator = Simulate.Simulator(pixelGrid, 5)
-    frames = Scenes.ColorWheel(pixelGrid)
-    simulator.Run(frames, 30)
+    pixelGrid = Grid(num_blocks_wide, num_blocks_tall, block_pixels_wide, block_pixels_tall)
+    simulator = Simulate.Simulator(pixelGrid, 2)
+
+    wall = Scenes.ColorWall(pixelGrid)
+    wheel = Scenes.ColorWheel(pixelGrid)
+    # image = Scenes.DisplayImage(pixelGrid, "")
+    # video = Scenes.PlayVideo(pixelGrid, "")
+    simulator.Run(wheel, 30)

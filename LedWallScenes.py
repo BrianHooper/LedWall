@@ -80,11 +80,11 @@ def Blank(pixelGrid):
     return frame
 
 class FallingPixel:
-    def __init__(self, ridx, cidx, color=None):
+    def __init__(self, ridx, cidx, color_palette, color=None):
         self.ridx = ridx
         self.cidx = cidx
         if color is None:
-            self.color = PASTEL[random.randrange(len(PASTEL))]
+            self.color = color_palette[random.randrange(len(color_palette))]
         else:
             self.color = color
 
@@ -105,19 +105,19 @@ class FallingPixel:
             return True
 
 
-def Waterfall(pixelGrid):
+def Waterfall(pixelGrid, color_palette=PASTEL):
     frames = []
 
     possible_cidxs = list(range(0, pixelGrid.width))
     falling_pixels = [
-        FallingPixel(0, possible_cidxs.pop(random.randrange(len(possible_cidxs))) )
+        FallingPixel(0, possible_cidxs.pop(random.randrange(len(possible_cidxs))), color_palette)
     ]
     total_fallen = 1
     while len(falling_pixels) > 0 and total_fallen < 50:
         chance = random.randrange(5)
         if chance == 3:
             total_fallen += 1
-            falling_pixels.append(FallingPixel(0, possible_cidxs.pop(random.randrange(len(possible_cidxs)))))
+            falling_pixels.append(FallingPixel(0, possible_cidxs.pop(random.randrange(len(possible_cidxs))), color_palette))
 
         frame = Blank(pixelGrid)
         for falling_pixel in falling_pixels:
@@ -131,7 +131,7 @@ def Waterfall(pixelGrid):
         extra_pixels = []
         for falling_pixel in falling_pixels:
             if falling_pixel.ridx == 0:
-                extra_pixel = FallingPixel(0, falling_pixel.cidx, falling_pixel.color)
+                extra_pixel = FallingPixel(0, falling_pixel.cidx, color_palette, falling_pixel.color)
                 if extra_pixel.Reduce():                    
                     extra_pixels.append(extra_pixel)
             if falling_pixel.ridx == 10:
@@ -145,7 +145,7 @@ def Waterfall(pixelGrid):
     return frames
 
 class FadeInPixel:
-    def __init__(self):
+    def __init__(self, color_palette):
         self.color = (0, 0, 0)
         self.goal_color = PASTEL[random.randrange(len(PASTEL))]
         self.started = False
@@ -174,7 +174,7 @@ class FadeInPixel:
         else:
             return False
 
-def RandomFadeIn(pixelGrid):
+def RandomFadeIn(pixelGrid, color_palette=PASTEL):
     frames = []
 
     frame = []
@@ -183,7 +183,7 @@ def RandomFadeIn(pixelGrid):
     random_threshold = total_pixels // 10
     for ridx, row in enumerate(pixelGrid.pixels):
         for cidx, pixel in enumerate(row):
-            frame.append([pixel, (0, 0, 0), FadeInPixel()])
+            frame.append([pixel, (0, 0, 0), FadeInPixel(color_palette)])
     frames.append(frame)
     while finished_pixels < total_pixels:
         frame  = []

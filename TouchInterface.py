@@ -1,15 +1,23 @@
-import tkinter as tk
 from LedWall import Grid
 import Simulate
 import LedWallScenes as Scenes
-import multiprocessing
-import threading
+
+import tkinter as tk
 import time
 import logging
+import threading
+import multiprocessing
 
 class TouchInterface:
     def __init__(self):
         self.pixelGrid = Grid()
+        self.InitializeInterface()
+
+    def Start(self):
+        self.StopSimulation = multiprocessing.Value('i', int(False))
+        self.window.mainloop()
+
+    def InitializeInterface(self):
         self.window = tk.Tk()
         buttons = []
         buttons.append(tk.Button(
@@ -36,10 +44,6 @@ class TouchInterface:
         for button in buttons:
             button.pack()
         self.threads = []
-        self.StopSimulation = multiprocessing.Value('i', int(False))
-
-    def Start(self):
-        self.window.mainloop()
 
     def StartCamera(self):
         self.threads = [x for x in self.threads if x.is_alive()]
@@ -69,9 +73,6 @@ class TouchInterface:
 
 
 if __name__ == "__main__":
-    fmt = '%(levelname)s: %(filename)s: %(lineno)d: %(message)s'
-    logging.basicConfig(level=logging.DEBUG, format=fmt)
-
     touchInterface = TouchInterface()
     touchInterface.Start()
 

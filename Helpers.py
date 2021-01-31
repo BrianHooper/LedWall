@@ -1,4 +1,5 @@
 import cv2
+import pickle
 
 def LoadImage(image_path, pixelGrid):
     img = cv2.imread(image_path)
@@ -39,3 +40,11 @@ def Wheel(pos):
         g = int(pos * 3)
         b = int(255 - pos * 3)
     return (r, g, b)
+
+def WriteFrames(filename, frames):
+    with open(filename, 'wb') as outfile:
+        pickle.dump(frames, outfile)
+
+def ReadFrames(filename):
+    with open(filename, 'rb') as infile:
+        return pickle.load(infile)

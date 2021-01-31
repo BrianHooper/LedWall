@@ -1,10 +1,15 @@
 import Simulate
 import LedWallScenes as Scenes
 from Helpers import *
+from DefinedColors import *
+
 import threading
 import time
 import platform
 import configparser
+import multiprocessing
+import os
+from pathlib import Path
 
 IS_PI = "arm" in platform.machine().lower()
 
@@ -98,17 +103,23 @@ class Grid:
 if __name__ == "__main__":
     pixelGrid = Grid()
     simulator = Simulate.Simulator(pixelGrid)
+    stop_flag = multiprocessing.Value('i', int(False))
 
     # wall = Scenes.ColorWall(pixelGrid)
     # wheel = Scenes.ColorWheel(pixelGrid)
     # image = Scenes.DisplayImage(pixelGrid, "")
     # video = Scenes.PlayVideo(pixelGrid, "")
-    # scene = Scenes.RandomFadeIn(pixelGrid)
+    # scene = Scenes.Waterfall(pixelGrid, PASTEL)
+    # WriteFrames("Scenes/WaterfallPastel.scene", scene)
+    scene = ReadFrames("Scenes/WaterfallPastel.scene")
+    sceneFileNames = os.listdir("Scenes")
+    
 
-    # if IS_PI:
-    #     pixelGrid.Display(wheel, 30, True)
-    # else:
-    #     simulator.Run(scene)
+    # print("Done")
+    if IS_PI:
+        pixelGrid.Display(scene, 30, True)
+    else:
+        simulator.Run(scene, stop_flag)
 
     # worker_thread = threading.Thread(target=simulator.Camera, args=(False,))
     # worker_thread.start()

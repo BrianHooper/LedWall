@@ -13,9 +13,9 @@ class SimPixel:
         self.game.draw.circle(self.display, color, self.location, self.size)
 
 class Simulator:
-    def __init__(self, grid, pixel_size):
-        self.grid = grid
-        self.pixel_size = pixel_size
+    def __init__(self, pixelGrid):
+        self.pixelGrid = pixelGrid
+        self.pixel_size = int(pixelGrid.config["simulator"]["pixel_diameter"])
         self.pixels = []
 
     def Initialize(self):
@@ -23,9 +23,9 @@ class Simulator:
         self.display = pygame.display.set_mode([800, 600])
         self.fpsclock = pygame.time.Clock()
 
-        for i in range(1, self.grid.height + 1):
+        for i in range(1, self.pixelGrid.height + 1):
             row = []
-            for j in range(1, self.grid.width + 1):
+            for j in range(1, self.pixelGrid.width + 1):
                 pixel = SimPixel(pygame, self.display, (j * 2 * self.pixel_size, i * 2 * self.pixel_size), self.pixel_size)
                 row.append(pixel)
             self.pixels.append(row)
@@ -52,7 +52,8 @@ class Simulator:
 
     def Camera(self, pixelGrid):
         self.Initialize()
-        camera = VideoCapture(0)
+        camera_index = int(pixelGrid.config["camera"]["webcam_index"])
+        camera = VideoCapture(camera_index)
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -61,7 +62,7 @@ class Simulator:
 
             s, img = camera.read()
             if s:
-                img = resize_image(img, pixelGrid)
+                img = ResizeImage(img, pixelGrid)
                 frame = GetImageFrame(img, pixelGrid)
                 for PixelColorPair in frame:
                     pixel = PixelColorPair[0]

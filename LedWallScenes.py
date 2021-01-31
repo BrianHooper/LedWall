@@ -1,5 +1,6 @@
 import cv2
 from cv2 import VideoCapture
+from Helpers import *
 
 BLACK = (0, 0, 0)
 
@@ -68,59 +69,25 @@ def ColorWheel(pixelGrid):
                 indices[ridx][cidx] = color_index
                 frame.append([pixel, color])
         frames.append(frame)
-
     return frames
 
-def load_image(image_path, pixelGrid):
-    img = cv2.imread(image_path)
-    return resize_image(img, pixelGrid)
-
-def resize_image(img, pixelGrid):    
-    x = pixelGrid.width
-    y = pixelGrid.height
-    resized_image = cv2.resize(img, (x, y))
-    return resized_image
-
-def fix_color(img):
-    for ridx, row in enumerate(img):
-        for cidx, color in enumerate(row):
-            color = [color[2], color[1], color[0]]
-            img[ridx][cidx] = color
-    return img
 
 def DisplayImage(pixelGrid, image_path, frames_duration=30):
     img = load_image(image_path, pixelGrid)
-
-    frame = []
-    for ridx, row in enumerate(pixelGrid.pixels):
-        for cidx, pixel in enumerate(row):
-            color = img[ridx][cidx]
-            color = (color[2], color[1], color[0])
-            frame.append([pixel, color])
+    frame = GetImageFrame(img, pixelGrid)
     frames = [frame for x in range(frames_duration)]
-
     return frames
 
 def PlayVideo(pixelGrid, video_path):
-    cam = VideoCapture(video_path)
-
+    camera = VideoCapture(video_path)
     frames = []
     s = True
     while s:
-        frame = []
-        s, img = cam.read()
-        if not s:
-            break
-        img = resize_image(img, pixelGrid)
-        for ridx, row in enumerate(pixelGrid.pixels):
-            for cidx, pixel in enumerate(row):
-                if ridx >= len(img) or cidx >= len(img[0]):
-                    continue
-                color = img[ridx][cidx]
-                color = (color[2], color[1], color[0])
-                frame.append([pixel, color])
+        s, img = camera.read()
+        if s:
+            img = ResizeImage(img, pixelGrid)
+            frame = GetImageFrame(img, pixelGrid)
         frames.append(frame)
-
     return frames
 
 def Blank(pixelGrid):

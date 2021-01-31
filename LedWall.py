@@ -4,6 +4,7 @@ from Helpers import *
 
 import time
 import platform
+import configparser
 
 IS_PI = "arm" in platform.machine().lower()
 
@@ -31,19 +32,17 @@ class Pixel:
             self.controller[self.strand_location] = color
 
 class Grid:
-    def __init__(self, num_blocks_wide, num_blocks_tall, block_width, block_height):
-        self.num_blocks_wide = num_blocks_wide
-        self.num_blocks_tall = num_blocks_tall
-        self.block_width = block_width
-        self.block_height = block_height
-        self.width = num_blocks_wide * block_pixels_wide
-        self.height = num_blocks_tall * block_pixels_tall
+    def __init__(self, config):
+        self.config = config
+        self.num_blocks_wide = int(config["grid"]["num_blocks_wide"])
+        self.num_blocks_tall = int(config["grid"]["num_blocks_tall"])
+        self.block_width = int(config["grid"]["block_pixels_wide"])
+        self.block_height = int(config["grid"]["block_pixels_tall"])
+        self.width = self.num_blocks_wide * self.block_width
+        self.height = self.num_blocks_tall * self.block_height
         self.Initalize()
 
     def Initalize(self):
-        total_rows_high = num_blocks_tall * block_pixels_tall
-        total_cols_wide = num_blocks_wide * block_pixels_wide
-
         total_pixels = self.width * self.height
         self.controller = GetController(total_pixels)
         self.pixels = [[-1 for x in range(0, self.width)] for y in range(0, self.height)]
@@ -76,9 +75,10 @@ class Grid:
             if not endless:
                 break
 
-    def Camera(self, pixelGrid):
+    def Camera(self):
         self.Initialize()
-        camera = VideoCapture(0)
+        camera_index = int(self.config["camera"]["webcam_index"])
+        camera = VideoCapture(camera_index)
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -86,7 +86,7 @@ class Grid:
 
             s, img = camera.read()
             if s:
-                img = resize_image(img, self.pixels)
+                img = ResizeImage(img, self.pixels)
                 frame = GetImageFrame(img, self.pixels)
                 for PixelColorPair in frame:
                     pixel = PixelColorPair[0]
@@ -100,17 +100,19 @@ if __name__ == "__main__":
     block_pixels_wide = 7
     block_pixels_tall = 7
 
-    pixelGrid = Grid(num_blocks_wide, num_blocks_tall, block_pixels_wide, block_pixels_tall)
-    simulator = Simulate.Simulator(pixelGrid, 2)
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    pixelGrid = Grid(config)
+    simulator = Simulate.Simulator(pixelGrid)
 
     # wall = Scenes.ColorWall(pixelGrid)
     # wheel = Scenes.ColorWheel(pixelGrid)
-    # image = Scenes.DisplayImage(pixelGrid, "")
+    image = Scenes.DisplayImage(pixelGrid, "")
     # video = Scenes.PlayVideo(pixelGrid, "")
     # total_frames = wall + wheel
-    # if IS_PI:
-    #     pixelGrid.Display(wheel, 30, True)
-    # else:
-    #     simulator.Run(wheel, 30)
+    if IS_PI:
+        pixelGrid.Display(wheel, 30, True)
+    else:
+        simulator.Run(image, 30)
 
-    simulator.Camera(pixelGrid)
+    # simulator.Camera(pixelGrid)

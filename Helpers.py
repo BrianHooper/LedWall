@@ -4,7 +4,7 @@ def load_image(image_path, pixelGrid):
     img = cv2.imread(image_path)
     return resize_image(img, pixelGrid)
 
-def resize_image(img, pixelGrid):    
+def ResizeImage(img, pixelGrid):    
     x = pixelGrid.width
     y = pixelGrid.height
     resized_image = cv2.resize(img, (x, y))

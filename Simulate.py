@@ -1,4 +1,6 @@
 import pygame
+from cv2 import VideoCapture
+from Helpers import *
 
 class SimPixel:
     def __init__(self, game, display, location, size):
@@ -47,3 +49,26 @@ class Simulator:
 
                 self.fpsclock.tick(fps)
                 pygame.display.update()
+
+    def Camera(self, pixelGrid):
+        self.Initialize()
+        camera = VideoCapture(0)
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit()
+
+
+            s, img = camera.read()
+            if s:
+                img = resize_image(img, pixelGrid)
+                frame = GetImageFrame(img, pixelGrid)
+                for PixelColorPair in frame:
+                    pixel = PixelColorPair[0]
+                    color = PixelColorPair[1]
+                    x = pixel.grid_location[0]
+                    y = pixel.grid_location[1]
+                    self.pixels[x][y].SetColor(color)
+
+            self.fpsclock.tick(30)
+            pygame.display.update()

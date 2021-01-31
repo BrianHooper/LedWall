@@ -1,5 +1,7 @@
 import Simulate
 import LedWallScenes as Scenes
+from Helpers import *
+
 import time
 import platform
 
@@ -74,21 +76,41 @@ class Grid:
             if not endless:
                 break
 
+    def Camera(self, pixelGrid):
+        self.Initialize()
+        camera = VideoCapture(0)
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit()
+
+            s, img = camera.read()
+            if s:
+                img = resize_image(img, self.pixels)
+                frame = GetImageFrame(img, self.pixels)
+                for PixelColorPair in frame:
+                    pixel = PixelColorPair[0]
+                    color = PixelColorPair[1]
+                    pixel.SetColor(color)
+
+
 if __name__ == "__main__":
-    num_blocks_wide = 2
-    num_blocks_tall = 2
-    block_pixels_wide = 4
-    block_pixels_tall = 3
+    num_blocks_wide = 5
+    num_blocks_tall = 4
+    block_pixels_wide = 7
+    block_pixels_tall = 7
 
     pixelGrid = Grid(num_blocks_wide, num_blocks_tall, block_pixels_wide, block_pixels_tall)
     simulator = Simulate.Simulator(pixelGrid, 2)
 
-    wall = Scenes.ColorWall(pixelGrid)
-    wheel = Scenes.ColorWheel(pixelGrid)
+    # wall = Scenes.ColorWall(pixelGrid)
+    # wheel = Scenes.ColorWheel(pixelGrid)
     # image = Scenes.DisplayImage(pixelGrid, "")
     # video = Scenes.PlayVideo(pixelGrid, "")
-    total_frames = wall + wheel
-    if IS_PI:
-        pixelGrid.Display(wheel, 30, True)
-    else:
-        simulator.Run(wheel, 30)
+    # total_frames = wall + wheel
+    # if IS_PI:
+    #     pixelGrid.Display(wheel, 30, True)
+    # else:
+    #     simulator.Run(wheel, 30)
+
+    simulator.Camera(pixelGrid)

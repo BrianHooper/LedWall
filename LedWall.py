@@ -1,7 +1,7 @@
 import Simulate
 import LedWallScenes as Scenes
 from Helpers import *
-
+import threading
 import time
 import platform
 import configparser
@@ -32,12 +32,13 @@ class Pixel:
             self.controller[self.strand_location] = color
 
 class Grid:
-    def __init__(self, config):
-        self.config = config
-        self.num_blocks_wide = int(config["grid"]["num_blocks_wide"])
-        self.num_blocks_tall = int(config["grid"]["num_blocks_tall"])
-        self.block_width = int(config["grid"]["block_pixels_wide"])
-        self.block_height = int(config["grid"]["block_pixels_tall"])
+    def __init__(self):
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
+        self.num_blocks_wide = int(self.config["grid"]["num_blocks_wide"])
+        self.num_blocks_tall = int(self.config["grid"]["num_blocks_tall"])
+        self.block_width = int(self.config["grid"]["block_pixels_wide"])
+        self.block_height = int(self.config["grid"]["block_pixels_tall"])
         self.width = self.num_blocks_wide * self.block_width
         self.height = self.num_blocks_tall * self.block_height
         self.Initalize()
@@ -95,24 +96,19 @@ class Grid:
 
 
 if __name__ == "__main__":
-    num_blocks_wide = 5
-    num_blocks_tall = 4
-    block_pixels_wide = 7
-    block_pixels_tall = 7
-
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    pixelGrid = Grid(config)
+    pixelGrid = Grid()
     simulator = Simulate.Simulator(pixelGrid)
 
     # wall = Scenes.ColorWall(pixelGrid)
     # wheel = Scenes.ColorWheel(pixelGrid)
-    image = Scenes.DisplayImage(pixelGrid, "")
+    # image = Scenes.DisplayImage(pixelGrid, "")
     # video = Scenes.PlayVideo(pixelGrid, "")
-    # total_frames = wall + wheel
-    if IS_PI:
-        pixelGrid.Display(wheel, 30, True)
-    else:
-        simulator.Run(image, 30)
+    # scene = Scenes.RandomFadeIn(pixelGrid)
 
-    # simulator.Camera(pixelGrid)
+    # if IS_PI:
+    #     pixelGrid.Display(wheel, 30, True)
+    # else:
+    #     simulator.Run(scene)
+
+    # worker_thread = threading.Thread(target=simulator.Camera, args=(False,))
+    # worker_thread.start()

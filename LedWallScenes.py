@@ -1,6 +1,8 @@
 import cv2
 from cv2 import VideoCapture
 from Helpers import *
+import random
+from DefinedColors import *
 
 BLACK = (0, 0, 0)
 
@@ -25,27 +27,6 @@ def ColorWall(pixelGrid):
 
     return frames
 
-def wheel(pos):
-    # Input a value 0 to 255 to get a color value.
-    # The colours are a transition r - g - b - back to r.
-    if pos < 0 or pos > 255:
-        r = g = b = 0
-    elif pos < 85:
-        r = int(pos * 3)
-        g = int(255 - pos * 3)
-        b = 0
-    elif pos < 170:
-        pos -= 85
-        r = int(255 - pos * 3)
-        g = 0
-        b = int(pos * 3)
-    else:
-        pos -= 170
-        r = 0
-        g = int(pos * 3)
-        b = int(255 - pos * 3)
-    return (r, g, b)
-
 def ColorWheel(pixelGrid):
     indices = [[0 for i in range(pixelGrid.width)] for j in range(pixelGrid.height)]
     count = 0
@@ -62,7 +43,7 @@ def ColorWheel(pixelGrid):
         for ridx, row in enumerate(pixelGrid.pixels):
             for cidx, pixel in enumerate(row):
                 color_index = indices[ridx][cidx]
-                color = wheel(color_index)
+                color = Wheel(color_insdex)
                 color_index += 1
                 if color_index > 255:
                     color_index = 0
@@ -73,7 +54,7 @@ def ColorWheel(pixelGrid):
 
 
 def DisplayImage(pixelGrid, image_path, frames_duration=30):
-    img = load_image(image_path, pixelGrid)
+    img = LoadImage(image_path, pixelGrid)
     frame = GetImageFrame(img, pixelGrid)
     frames = [frame for x in range(frames_duration)]
     return frames
@@ -97,3 +78,131 @@ def Blank(pixelGrid):
             color = (0, 0, 0)
             frame.append([pixel, color])
     return frame
+
+class FallingPixel:
+    def __init__(self, ridx, cidx, color=None):
+        self.ridx = ridx
+        self.cidx = cidx
+        if color is None:
+            self.color = PASTEL[random.randrange(len(PASTEL))]
+        else:
+            self.color = color
+
+    def Reduce(self):
+        red = self.color[0] - 50
+        green = self.color[1] - 50
+        blue = self.color[2] - 50
+        if red < 0:
+            red = 0
+        if blue < 0:
+            blue = 0
+        if green < 0:
+            green = 0
+        self.color = (red, green, blue)
+        if red == 0 and green == 0 and blue == 0:
+            return False
+        else:
+            return True
+
+
+def Waterfall(pixelGrid):
+    frames = []
+
+    possible_cidxs = list(range(0, pixelGrid.width))
+    falling_pixels = [
+        FallingPixel(0, possible_cidxs.pop(random.randrange(len(possible_cidxs))) )
+    ]
+    total_fallen = 1
+    while len(falling_pixels) > 0 and total_fallen < 50:
+        chance = random.randrange(5)
+        if chance == 3:
+            total_fallen += 1
+            falling_pixels.append(FallingPixel(0, possible_cidxs.pop(random.randrange(len(possible_cidxs)))))
+
+        frame = Blank(pixelGrid)
+        for falling_pixel in falling_pixels:
+            for pxidx, pixel in enumerate(frame):
+                grid_location = pixel[0].grid_location
+                pridx = grid_location[0]
+                pcidx = grid_location[1]
+
+                if falling_pixel.ridx == pridx and falling_pixel.cidx == pcidx:
+                    frame[pxidx][1] = falling_pixel.color
+        extra_pixels = []
+        for falling_pixel in falling_pixels:
+            if falling_pixel.ridx == 0:
+                extra_pixel = FallingPixel(0, falling_pixel.cidx, falling_pixel.color)
+                if extra_pixel.Reduce():                    
+                    extra_pixels.append(extra_pixel)
+            if falling_pixel.ridx == 10:
+                possible_cidxs.append(falling_pixel.cidx)
+            falling_pixel.ridx += 1
+
+        falling_pixels += extra_pixels
+        falling_pixels = [x for x in falling_pixels if falling_pixel.ridx < pixelGrid.height]
+        frames += [frame for x in range(3)]
+
+    return frames
+
+class FadeInPixel:
+    def __init__(self):
+        self.color = (0, 0, 0)
+        self.goal_color = PASTEL[random.randrange(len(PASTEL))]
+        self.started = False
+        self.finished = False
+
+    def Increase(self):
+        if self.finished:
+            return False
+        red = self.color[0] + 3
+        green = self.color[1] + 3
+        blue = self.color[2] + 3
+
+        goal_red = self.goal_color[0]
+        goal_green = self.goal_color[1]
+        goal_blue = self.goal_color[2]
+        if red > goal_red:
+            red = goal_red
+        if blue > goal_blue:
+            blue = goal_blue
+        if green > goal_green:
+            green = goal_green
+        self.color = (red, green, blue)
+        if red == goal_red and green == goal_green and blue == goal_blue:
+            self.finished = True
+            return True
+        else:
+            return False
+
+def RandomFadeIn(pixelGrid):
+    frames = []
+
+    frame = []
+    total_pixels = pixelGrid.width * pixelGrid.height
+    finished_pixels = 0
+    random_threshold = total_pixels // 10
+    for ridx, row in enumerate(pixelGrid.pixels):
+        for cidx, pixel in enumerate(row):
+            frame.append([pixel, (0, 0, 0), FadeInPixel()])
+    frames.append(frame)
+    while finished_pixels < total_pixels:
+        frame  = []
+        chance_count = 0
+        for previous_pixel in frames[-1]:
+                fadeinpixel = previous_pixel[2]
+                if fadeinpixel.finished:
+                    frame.append(previous_pixel)
+                elif fadeinpixel.started:
+                    if fadeinpixel.Increase():
+                        finished_pixels += 1
+                    frame.append([previous_pixel[0], fadeinpixel.color, previous_pixel[2]])
+                else:
+                    chance = int(100 * float(total_pixels - finished_pixels) / float(total_pixels))
+                    if chance == 0:
+                        chance = 1
+                    choice = random.randrange(chance)
+                    if choice == 0:
+                        fadeinpixel.started = True
+                    frame.append([previous_pixel[0], fadeinpixel.color, fadeinpixel])
+        frames += [frame for x in range(3)]
+    return frames
